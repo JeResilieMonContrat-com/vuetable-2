@@ -28,28 +28,33 @@ export default {
         return 2
       }
     },
+    data: {
+      type: Object
+    }
   },
   data: function() {
     return {
-      eventPrefix: 'vuetable-pagination:',
-      tablePagination: null
+      eventPrefix: 'vuetable-pagination:'
     }
   },
   computed: {
     totalPage () {
-      return this.tablePagination === null
-        ? 0
-        : this.tablePagination.last_page
+      if (!this.data || !this.data.last_page) {
+        return 0;
+      }
+      return this.data.last_page;
     },
     isOnFirstPage () {
-      return this.tablePagination === null
-        ? false
-        : this.tablePagination.current_page === 1
+      if (!this.data || !this.data.current_page) {
+        return true;
+      }
+      return this.data.current_page === 1;
     },
     isOnLastPage () {
-      return this.tablePagination === null
-        ? false
-        : this.tablePagination.current_page === this.tablePagination.last_page
+      if (!this.data || !this.data.last_page || !this.data.current_page) {
+        return false;
+      }
+      return this.data.current_page === this.data.last_page;
     },
     notEnoughPages () {
       return this.totalPage < (this.onEachSide * 2) + 4
@@ -58,13 +63,13 @@ export default {
       return this.onEachSide * 2 +1;
     },
     windowStart () {
-      if (!this.tablePagination || this.tablePagination.current_page <= this.onEachSide) {
+      if (!this.data || !this.data.current_page || this.data.current_page <= this.onEachSide) {
         return 1
-      } else if (this.tablePagination.current_page >= (this.totalPage - this.onEachSide)) {
+      } else if (this.data.current_page >= (this.totalPage - this.onEachSide)) {
         return this.totalPage - this.onEachSide*2
       }
 
-      return this.tablePagination.current_page - this.onEachSide
+      return this.data.current_page - this.onEachSide
     },
   },
   methods: {
@@ -72,13 +77,13 @@ export default {
       this.$emit(this.eventPrefix+'change-page', page)
     },
     isCurrentPage (page) {
-      return page === this.tablePagination.current_page
+      return page === this.data.current_page
     },
-    setPaginationData (tablePagination) {
-      this.tablePagination = tablePagination
+    setPaginationData (data) {
+      this.data = data
     },
     resetData () {
-      this.tablePagination = null
+      this.data = null
     }
   }
 }
