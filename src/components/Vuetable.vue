@@ -37,6 +37,22 @@
           </template>
         </template>
       </tr>
+      <tr v-if="columnFilterActive">
+        <template v-for="field in tableFields">
+          <template v-if="field.visible">
+            <template v-if="field.columnFilter">
+              <th :class="['vuetable-th-filter', field.titleClass || '']">
+                <input :class="field.columnFilter.inputClass || ''"
+                       @keyup="updateColumnFilters"
+                       v-model="columnFilters[field.columnFilter.name]">
+              </th>
+            </template>
+            <template v-else>
+              <th></th>
+            </template>
+          </template>
+        </template>
+      </tr>
     </thead>
     <tbody v-cloak class="vuetable-body">
       <template v-for="(item, index) in tableData">
@@ -114,6 +130,7 @@
 
 <script>
 import axios from 'axios'
+import debounce from 'debounce'
 
 export default {
   props: {
@@ -208,6 +225,12 @@ export default {
         return false
       }
     },
+    columnFilterActive: {
+      type: Boolean,
+      default () {
+        return false;
+      }
+    },
     /*
      * physical key that will trigger multi-sort option
      * possible values: 'alt', 'ctrl', 'meta', 'shift'
@@ -275,11 +298,15 @@ export default {
       currentPage: 1,
       selectedTo: [],
       visibleDetailRows: [],
+      columnFilters: {}
     }
   },
   mounted () {
-    this.normalizeFields()
-    this.normalizeSortOrder()
+    this.normalizeFields();
+    this.normalizeSortOrder();
+    if (this.columnFilterActive) {
+      this.normalizeColumnFilters();
+    }
     this.$nextTick(function() {
       this.fireEvent('initialized', this.tableFields)
     })
@@ -328,13 +355,16 @@ export default {
       return this.minRows - this.tableData.length
     },
     isApiMode () {
-      return this.apiMode 
+      return this.apiMode
     },
     isDataMode () {
       return ! this.apiMode
     }
   },
   methods: {
+    updateColumnFilters: debounce(function() {
+      this.loadData();
+    }, 300),
     normalizeFields () {
       if (typeof(this.fields) === 'undefined') {
         this.warn('You need to provide "fields" prop.')
@@ -363,10 +393,18 @@ export default {
             dataClass: (field.dataClass === undefined) ? '' : field.dataClass,
             callback: (field.callback === undefined) ? '' : field.callback,
             visible: (field.visible === undefined) ? true : field.visible,
+            columnFilter: (field.columnFilter === undefined) ? null : field.columnFilter
           }
         }
         self.tableFields.push(obj)
       })
+    },
+    normalizeColumnFilters () {
+      this.tableFields.forEach(field => {
+        if (field.columnFilter) {
+          this.columnFilters[field.columnFilter.name] = '';
+        }
+      });
     },
     setData (data) {
       this.apiMode = false
@@ -403,8 +441,8 @@ export default {
       return title
     },
     renderSequence (index) {
-      return this.tablePagination 
-        ? this.tablePagination.from + index 
+      return this.tablePagination
+        ? this.tablePagination.from + index
         : index
     },
     isSpecialField (fieldName) {
@@ -874,7 +912,7 @@ export default {
         this.setData(this.data)
       } else {
         this.normalizeSortOrder()
-        this.setData(this.dataManager(this.sortOrder, this.makePagination()))
+        this.setData(this.dataManager(this.sortOrder, this.makePagination(), this.columnFilters))
       }
     },
     onRowClass (dataItem, index) {
