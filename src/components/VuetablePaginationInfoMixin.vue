@@ -21,30 +21,30 @@ export default {
         return 'No relevant data'
       }
     },
-  },
-  data: function() {
-    return {
-      tablePagination: null
+    data: {
+      type: Object
     }
   },
   computed: {
     paginationInfo () {
-      if (this.tablePagination == null || this.tablePagination.total == 0) {
+      if (this.data == null || this.data.total == 0) {
         return this.noDataTemplate
       }
 
       return this.infoTemplate
-        .replace('{from}', this.tablePagination.from || 0)
-        .replace('{to}', this.tablePagination.to || 0)
-        .replace('{total}', this.tablePagination.total || 0)
+        .replace('{from}', this.data.from || 0)
+        .replace('{to}', this.data.to || 0)
+        .replace('{total}', this.data.total || 0)
+        .replace('{current}', this.data.current_page || 0)
+        .replace('{last}', this.data.last_page || 0)
     },
   },
   methods: {
-    setPaginationData (tablePagination) {
-      this.tablePagination = tablePagination
+    setPaginationData (data) {
+      this.data = data
     },
     resetData () {
-      this.tablePagination = null
+      this.data = null
     }
   },
 }
