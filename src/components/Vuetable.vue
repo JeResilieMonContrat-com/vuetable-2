@@ -42,9 +42,16 @@
           <template v-if="field.visible">
             <template v-if="field.columnFilter">
               <th :class="['vuetable-th-filter', field.titleClass || '']">
-                <input :class="field.columnFilter.inputClass || ''"
+                <input v-if="!field.columnFilter.inputType || field.columnFilter.inputType == 'text'"
+                       :class="field.columnFilter.inputClass || ''"
                        @keyup="updateColumnFilters"
-                       v-model="columnFilters[field.columnFilter.name]">
+                       v-model="columnFilters[field.columnFilter.name]" />
+                <select v-if="field.columnFilter.inputType == 'select'"
+                        :class="field.columnFilter.inputClass || ''"
+                        @change="updateColumnFilters"
+                        v-model="columnFilters[field.columnFilter.name]">
+                  <option v-for="(value, key) in field.columnFilter.options" :value="key">{{ value }}</option>
+                </select>
               </th>
             </template>
             <template v-else>
