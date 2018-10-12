@@ -370,6 +370,7 @@ export default {
   },
   methods: {
     updateColumnFilters: debounce(function() {
+      this.fireEvent('filters-changed');
       this.loadData();
     }, 300),
     normalizeFields () {
